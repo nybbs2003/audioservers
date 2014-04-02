@@ -29,14 +29,14 @@ import org.jaudiolibs.audioservers.util.ObjectLookup;
  *
  * @author Neil C Smith
  */
-public final class AudioConfiguration implements java.io.Serializable{
+public final class AudioConfiguration {
 
     private final float sampleRate;
     private final int inputChannelCount;
     private final int outputChannelCount;
     private final int maxBufferSize;
     private final boolean fixedBufferSize;
-    private final transient ObjectLookup lookup;
+    private final ObjectLookup lookup;
 
         
     /**
