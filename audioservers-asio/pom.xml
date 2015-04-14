@@ -16,14 +16,11 @@
   </build>
   <dependencies>
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>org.jaudiolibs</groupId>
       <artifactId>audioservers-api</artifactId>
-      <version>${project.version}</version>
+      <version>1.1</version>
     </dependency>
   </dependencies>
-  <parent>
-  	<groupId>org.jaudiolibs</groupId>
-  	<artifactId>audioservers</artifactId>
-  	<version>1.1-SNAPSHOT</version>
-  </parent>
+  <groupId>org.jaudiolibs</groupId>
+  <version>1.1</version>
 </project>
