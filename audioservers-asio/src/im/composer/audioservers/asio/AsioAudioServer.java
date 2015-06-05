@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.jaudiolibs.audioservers.AudioClient;
 import org.jaudiolibs.audioservers.AudioConfiguration;
@@ -111,6 +112,29 @@ public class AsioAudioServer implements AudioServer {
 		// asioDriver = null;
 	}
 
+    public static final AudioServer createServer(AudioConfiguration config, AudioClient client) throws Exception {
+    	List<String> names = AsioDriver.getDriverNames();
+    	if(names.isEmpty()){
+    		throw new IndexOutOfBoundsException("No ASIO Device Available!");
+    	}
+    	String id = names.get(0);
+    	AsioDriver asioDriver = AsioDriver.getDriver(id);
+    	if(config.getInputChannelCount()>asioDriver.getNumChannelsInput()){
+    		throw new IndexOutOfBoundsException("Not Enought Input Channels!");
+    	}
+    	if(config.getOutputChannelCount()>asioDriver.getNumChannelsOutput()){
+    		throw new IndexOutOfBoundsException("Not Enought Output Channels!");
+    	}
+    	Set<Integer> inputChannel = new TreeSet<>();
+    	Set<Integer> outputChannel = new TreeSet<>();
+    	for(int i=0;i<config.getInputChannelCount();i++){
+    		inputChannel.add(i);
+    	}
+    	for(int i=0;i<config.getOutputChannelCount();i++){
+    		outputChannel.add(i);
+    	}
+    	return create(id,config.getSampleRate(),inputChannel,outputChannel,client);
+    }
 	public static final AsioAudioServer create(String id, float sampleRate, Set<Integer> inputChannel, Set<Integer> outputChannel, AudioClient client) {
 		HashSet<AsioChannel> activeChannels = new HashSet<AsioChannel>();
 		AsioDriver asioDriver = AsioDriver.getDriver(id);
