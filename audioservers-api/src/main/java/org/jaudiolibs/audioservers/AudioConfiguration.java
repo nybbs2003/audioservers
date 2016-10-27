@@ -14,7 +14,9 @@
  */
 package org.jaudiolibs.audioservers;
 
+import java.util.Collections;
 import java.util.Iterator;
+
 import org.jaudiolibs.audioservers.util.ObjectLookup;
 
 /**
@@ -168,8 +170,9 @@ public final class AudioConfiguration {
 	 * @param type
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> Iterable<T> findAll(Class<T> type) {
-		return lookup.findAll(type);
+		return lookup==null?(Iterable<T>)Collections.emptyList():lookup.findAll(type);
 	}
 
 	@Override
