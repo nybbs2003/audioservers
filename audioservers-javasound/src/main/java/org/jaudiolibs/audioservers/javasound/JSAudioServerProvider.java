@@ -57,166 +57,160 @@ import org.jaudiolibs.audioservers.ext.Device;
  * @author Neil C Smith
  */
 public class JSAudioServerProvider extends AudioServerProvider {
-    
-    private final static Logger LOG = Logger.getLogger(JSAudioServerProvider.class.getName());
 
-    @Override
-    public <T> T find(Class<T> type) {
-        Iterator<T> itr = findAll(type).iterator();
-        if (itr.hasNext()) {
-            return itr.next();
-        } else {
-            return null;
-        }
-    }
+	private final static Logger LOG = Logger.getLogger(JSAudioServerProvider.class.getName());
 
-    @Override
-    public <T> Iterable<T> findAll(Class<T> type) {
-        if (type.isAssignableFrom(Device.class)) {
-            return (Iterable<T>) findDevices();
-        } else {
-            return Collections.emptyList();
-        }
+	@Override
+	public <T> T find(Class<T> type) {
+		Iterator<T> itr = findAll(type).iterator();
+		if (itr.hasNext()) {
+			return itr.next();
+		} else {
+			return null;
+		}
+	}
 
-    }
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> Iterable<T> findAll(Class<T> type) {
+		if (type.isAssignableFrom(Device.class)) {
+			return (Iterable<T>) findDevices();
+		} else {
+			return Collections.emptyList();
+		}
 
-    @Override
-    public String getLibraryName() {
-        return "JavaSound";
-    }
+	}
 
-    @Override
-    public AudioServer createServer(AudioConfiguration config, AudioClient client) throws Exception {
-        Device inputDevice = findInputDevice(config);
-        Mixer inputMixer = inputDevice == null ? null : inputDevice.find(Mixer.class);
-        Device outputDevice = findOutputDevice(config);
-        Mixer outputMixer = outputDevice == null ? null : outputDevice.find(Mixer.class);
-        JSTimingMode timingMode = findTimingMode(config);
-        
-        ArrayList<Object> exts = new ArrayList<Object>();
-        if (inputDevice != null) {
-            exts.add(inputDevice);
-        }
-        if (outputDevice != null && outputDevice != inputDevice) {
-            exts.add(outputDevice);
-        }
-        exts.add(timingMode);
-        
-        config = new AudioConfiguration(
-                config.getSampleRate(),
-                config.getInputChannelCount(),
-                config.getOutputChannelCount(),
-                config.getMaxBufferSize(),
-                exts.toArray());
-        
-        if (LOG.isLoggable(Level.FINE)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Building JSAudioServer\n");
-            sb.append(config);
-            sb.append("Input Mixer : ").append(inputMixer).append('\n');
-            sb.append("Output Mixer : ").append(outputMixer).append('\n');
-            LOG.fine(sb.toString());
-        }
-        
-        return new JSAudioServer(inputMixer, outputMixer, timingMode, config, client);
-    }
-    
-    private static Device findInputDevice(AudioConfiguration config) {
-        for (Device dev : config.findAll(Device.class)) {
-            if (dev.getMaxInputChannels() > 0) {
-                Mixer m = dev.find(Mixer.class);
-                if (m != null) {
-                    return dev;
-                }
-            }
-        }
-        return null;
-    }
+	@Override
+	public String getLibraryName() {
+		return "JavaSound";
+	}
 
-    private static Device findOutputDevice(AudioConfiguration config) {
-        for (Device dev : config.findAll(Device.class)) {
-            if (dev.getMaxOutputChannels() > 0) {
-                Mixer m = dev.find(Mixer.class);
-                if (m != null) {
-                    return dev;
-                }
-            }
-        }
-        return null;
-    }
-    
-    private static Mixer findInputMixer(AudioConfiguration config) {
-        Mixer ret = null;
-        for (Device dev : config.findAll(Device.class)) {
-            if (dev.getMaxInputChannels() > 0) {
-                ret = dev.find(Mixer.class);
-                if (ret != null) {
-                    break;
-                }
-            }
-        }
-        return ret;
-    }
-    
-    private static Mixer findOutputMixer(AudioConfiguration config) {
-        Mixer ret = null;
-        for (Device dev : config.findAll(Device.class)) {
-            if (dev.getMaxOutputChannels() > 0) {
-                ret = dev.find(Mixer.class);
-                if (ret != null) {
-                    break;
-                }
-            }
-        }
-        return ret;
-    }
+	@Override
+	public AudioServer createServer(AudioConfiguration config, AudioClient client) throws Exception {
+		Device inputDevice = findInputDevice(config);
+		Mixer inputMixer = inputDevice == null ? null : inputDevice.find(Mixer.class);
+		Device outputDevice = findOutputDevice(config);
+		Mixer outputMixer = outputDevice == null ? null : outputDevice.find(Mixer.class);
+		JSTimingMode timingMode = findTimingMode(config);
 
-    
+		ArrayList<Object> exts = new ArrayList<Object>();
+		if (inputDevice != null) {
+			exts.add(inputDevice);
+		}
+		if (outputDevice != null && outputDevice != inputDevice) {
+			exts.add(outputDevice);
+		}
+		exts.add(timingMode);
 
-    private static JSTimingMode findTimingMode(AudioConfiguration config) {
-        JSTimingMode mode = config.find(JSTimingMode.class);
-        if (mode == null) {
-            return JSTimingMode.Estimated;
-        } else {
-            return mode;
-        }
-    }
+		config = new AudioConfiguration(config.getSampleRate(), config.getInputChannelCount(), config.getOutputChannelCount(), config.getMaxBufferSize(), exts.toArray());
 
-    private static List<Device> findDevices() {
-        Mixer.Info[] mixerInfos = AudioSystem.getMixerInfo();
-        if (mixerInfos.length == 0) {
-            return Collections.emptyList();
-        }
-        List<Device> devices = new ArrayList<Device>(mixerInfos.length);
-        for (Mixer.Info info : mixerInfos) {
-            Mixer mixer = AudioSystem.getMixer(info);
-            int ins = getMaximumChannels(mixer, true);
-            int outs = getMaximumChannels(mixer, false);
-            // @TODO what about port mixers?
-//            if (ins == 0 && outs == 0) {
-//                continue;
-//            }
-            devices.add(new JSDevice(mixer, ins, outs));
-        }
-        return devices;
-    }
+		if (LOG.isLoggable(Level.FINE)) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Building JSAudioServer\n");
+			sb.append(config);
+			sb.append("Input Mixer : ").append(inputMixer).append('\n');
+			sb.append("Output Mixer : ").append(outputMixer).append('\n');
+			LOG.fine(sb.toString());
+		}
 
-    private static int getMaximumChannels(Mixer mixer, boolean input) {
-        int max = 0;
-        Line.Info[] lines = input ? mixer.getTargetLineInfo() : mixer.getSourceLineInfo();
-        for (Line.Info line : lines) {
-            if (line instanceof DataLine.Info) {
-                AudioFormat[] formats = ((DataLine.Info) line).getFormats();
-                for (AudioFormat format : formats) {
-                    int channels = format.getChannels();
-                    if (channels == AudioSystem.NOT_SPECIFIED) {
-                        max = 32;
-                    } else if (channels > max) {
-                        max = channels;
-                    }
-                }
-            }
-        }
-        return max;
-    }
+		return new JSAudioServer(inputMixer, outputMixer, timingMode, config, client);
+	}
+
+	private static Device findInputDevice(AudioConfiguration config) {
+		for (Device dev : config.findAll(Device.class)) {
+			if (dev.getMaxInputChannels() > 0) {
+				Mixer m = dev.find(Mixer.class);
+				if (m != null) {
+					return dev;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static Device findOutputDevice(AudioConfiguration config) {
+		for (Device dev : config.findAll(Device.class)) {
+			if (dev.getMaxOutputChannels() > 0) {
+				Mixer m = dev.find(Mixer.class);
+				if (m != null) {
+					return dev;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static Mixer findInputMixer(AudioConfiguration config) {
+		Mixer ret = null;
+		for (Device dev : config.findAll(Device.class)) {
+			if (dev.getMaxInputChannels() > 0) {
+				ret = dev.find(Mixer.class);
+				if (ret != null) {
+					break;
+				}
+			}
+		}
+		return ret;
+	}
+
+	private static Mixer findOutputMixer(AudioConfiguration config) {
+		Mixer ret = null;
+		for (Device dev : config.findAll(Device.class)) {
+			if (dev.getMaxOutputChannels() > 0) {
+				ret = dev.find(Mixer.class);
+				if (ret != null) {
+					break;
+				}
+			}
+		}
+		return ret;
+	}
+
+	private static JSTimingMode findTimingMode(AudioConfiguration config) {
+		JSTimingMode mode = config.find(JSTimingMode.class);
+		if (mode == null) {
+			return JSTimingMode.Estimated;
+		} else {
+			return mode;
+		}
+	}
+
+	private static List<Device> findDevices() {
+		Mixer.Info[] mixerInfos = AudioSystem.getMixerInfo();
+		if (mixerInfos.length == 0) {
+			return Collections.emptyList();
+		}
+		List<Device> devices = new ArrayList<Device>(mixerInfos.length);
+		for (Mixer.Info info : mixerInfos) {
+			Mixer mixer = AudioSystem.getMixer(info);
+			int ins = getMaximumChannels(mixer, true);
+			int outs = getMaximumChannels(mixer, false);
+			// @TODO what about port mixers?
+			// if (ins == 0 && outs == 0) {
+			// continue;
+			// }
+			devices.add(new JSDevice(mixer, ins, outs));
+		}
+		return devices;
+	}
+
+	private static int getMaximumChannels(Mixer mixer, boolean input) {
+		int max = 0;
+		Line.Info[] lines = input ? mixer.getTargetLineInfo() : mixer.getSourceLineInfo();
+		for (Line.Info line : lines) {
+			if (line instanceof DataLine.Info) {
+				AudioFormat[] formats = ((DataLine.Info) line).getFormats();
+				for (AudioFormat format : formats) {
+					int channels = format.getChannels();
+					if (channels == AudioSystem.NOT_SPECIFIED) {
+						max = 32;
+					} else if (channels > max) {
+						max = channels;
+					}
+				}
+			}
+		}
+		return max;
+	}
 }

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>audioservers-asio</artifactId>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
+		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -13,31 +13,32 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.5</version>
+				<executions>
+					<execution>
+						<id>copy-xmls</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/classes</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/main/java</directory>
+									<includes>
+										<include>**</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
-	<repositories>
-		<repository>
-			<id>nexus-releases</id>
-			<name>internal nexus repository</name>
-			<url>http://xxx-ws.local:8081/nexus/content/groups/public/</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>interval:5</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories>
-	<distributionManagement>
-		<repository>
-			<id>nexus-releases</id>
-			<name>internal nexus repository</name>
-			<url>http://xxx-ws.local:8081/nexus/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>nexus-snapshots</id>
-			<name>internal nexus repository</name>
-			<url>http://xxx-ws.local:8081/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.jaudiolibs</groupId>
