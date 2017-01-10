@@ -25,6 +25,7 @@ import java.util.List;
  *
  * @author Neil C Smith
  */
+@FunctionalInterface
 public interface AudioClient {
 
 	/**
@@ -36,7 +37,7 @@ public interface AudioClient {
 	 *            encapsulates information required for configuring the client
 	 * @throws Exception
 	 */
-	public void configure(AudioConfiguration context) throws Exception;
+	public default void configure(AudioConfiguration context) throws Exception{}
 
 	/**
 	 * The method that actually processes the audio. The client is provided with the time for the current buffer, measured in nanoseconds and relative to System.nanotime(). The client should always
@@ -61,6 +62,6 @@ public interface AudioClient {
 	/**
 	 * Signal that the client is being shut down. It is up to implementors of this interface whether they allow themselves to be reconfigured ready to process audio again.
 	 */
-	public void shutdown();
+	public default void shutdown(){}
 
 }
