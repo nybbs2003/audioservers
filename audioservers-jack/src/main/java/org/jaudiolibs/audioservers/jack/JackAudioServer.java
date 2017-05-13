@@ -67,19 +67,19 @@ public class JackAudioServer implements AudioServer {
 	private ClientID clientID;
 	private AudioConfiguration context;
 	private AudioClient client;
-	private Jack jack;
-	private JackClient jackclient;
+	protected Jack jack;
+	protected JackClient jackclient;
 	private AtomicReference<State> state;
-	private JackPort[] inputPorts;
+	protected JackPort[] inputPorts;
 	private List<FloatBuffer> inputBuffers;
-	private JackPort[] outputPorts;
+	protected JackPort[] outputPorts;
 	private List<FloatBuffer> outputBuffers;
 	private Connections connections;
 
 	private JackClientRegistrationCallback client_reg_callback;
 	private JackPortRegistrationCallback port_reg_callback;
 
-	JackAudioServer(ClientID id, Connections connections, AudioConfiguration ctxt, AudioClient client) {
+	public JackAudioServer(ClientID id, Connections connections, AudioConfiguration ctxt, AudioClient client) {
 		this.clientID = id;
 		this.connections = connections;
 		this.context = ctxt;
@@ -160,7 +160,7 @@ public class JackAudioServer implements AudioServer {
 		});
 	}
 
-	private void runImpl() {
+	protected void runImpl() {
 		try {
 			// make sure context is correct.
 			ClientID id = clientID;
@@ -189,6 +189,7 @@ public class JackAudioServer implements AudioServer {
 		}
 	}
 
+	
 	private void connectInputs() {
 		try {
 			String[] ins = jack.getPorts(jackclient, null, JackPortType.AUDIO, EnumSet.of(JackPortFlags.JackPortIsOutput, JackPortFlags.JackPortIsPhysical));
@@ -285,11 +286,11 @@ public class JackAudioServer implements AudioServer {
 		jack.disconnect(jackclient, source, destination);
 	}
 
-	public void setClientRegistrationCallback(JackClientRegistrationCallback callback) throws JackException {
+	public void setClientRegistrationCallback(JackClientRegistrationCallback callback){
 		client_reg_callback = callback;
 	}
 
-	public void setPortRegistrationCallback(JackPortRegistrationCallback callback) throws JackException {
+	public void setPortRegistrationCallback(JackPortRegistrationCallback callback){
 		port_reg_callback = callback;
 	}
 
