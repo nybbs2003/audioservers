@@ -180,8 +180,10 @@ public class JackAudioServer implements AudioServer {
 			if (connections.isConnectOutputs()) {
 				connectOutputs();
 			}
-			while (state.get() == State.Active) {
-				Thread.sleep(100); // @TODO switch to wait()
+			synchronized(this){
+				while(state.get() == State.Active){
+					wait();
+				}
 			}
 		} catch (Exception ex) {
 			LOG.log(Level.FINE, "", ex);
