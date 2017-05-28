@@ -1,6 +1,5 @@
 package org.jaudiolibs.audioservers.jack;
 
-import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
