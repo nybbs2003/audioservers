@@ -26,10 +26,16 @@ package org.jaudiolibs.audioservers.jack;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.sound.midi.MidiMessage;
+import javax.sound.midi.Receiver;
+import javax.sound.midi.Transmitter;
 
 import org.jaudiolibs.audioservers.AudioClient;
 import org.jaudiolibs.audioservers.AudioConfiguration;
@@ -40,6 +46,7 @@ import org.jaudiolibs.jnajack.Jack;
 import org.jaudiolibs.jnajack.JackClient;
 import org.jaudiolibs.jnajack.JackClientRegistrationCallback;
 import org.jaudiolibs.jnajack.JackException;
+import org.jaudiolibs.jnajack.JackMidi;
 import org.jaudiolibs.jnajack.JackOptions;
 import org.jaudiolibs.jnajack.JackPort;
 import org.jaudiolibs.jnajack.JackPortFlags;
@@ -73,11 +80,14 @@ public class JackAudioServer implements AudioServer {
 	protected JackPort[] inputPorts;
 	private List<FloatBuffer> inputBuffers;
 	protected JackPort[] outputPorts;
+	protected JackPort midiOut;
+	private Queue<MidiMessage> midi_outs;
 	private List<FloatBuffer> outputBuffers;
 	private Connections connections;
 
 	private JackClientRegistrationCallback client_reg_callback;
 	private JackPortRegistrationCallback port_reg_callback;
+	private boolean setupMidi = false;
 
 	public JackAudioServer(ClientID id, Connections connections, AudioConfiguration ctxt, AudioClient client) {
 		this.clientID = id;
@@ -129,6 +139,10 @@ public class JackAudioServer implements AudioServer {
 		outputBuffers = Arrays.asList(new FloatBuffer[count]);
 		for (int i = 0; i < count; i++) {
 			outputPorts[i] = jackclient.registerPort("Output_" + (i + 1), JackPortType.AUDIO, JackPortFlags.JackPortIsOutput);
+		}
+		if(setupMidi){
+			midiOut = jackclient.registerPort("MIDI Out", JackPortType.MIDI, JackPortFlags.JackPortIsOutput);
+			midi_outs = new LinkedList<>();
 		}
 		jackclient.setPortRegistrationCallback(new JackPortRegistrationCallback() {
 
@@ -218,6 +232,25 @@ public class JackAudioServer implements AudioServer {
 
 	}
 
+	public Receiver getReceiver(){
+		return new Receiver() {
+
+			public void send(MidiMessage message, long timeStamp) {
+				if (midi_outs!=null) {
+					midi_outs.offer(message);
+				}
+			}
+
+			public void close() {
+
+			}
+		};
+	}
+
+	public void setSetupMidi(boolean setupMidi) {
+		this.setupMidi = setupMidi;
+	}
+
 	private void processBuffers(int nframes) {
 		for (int i = 0; i < inputPorts.length; i++) {
 			inputBuffers.set(i, inputPorts[i].getFloatBuffer());
@@ -237,6 +270,13 @@ public class JackAudioServer implements AudioServer {
 			} else {
 				try {
 					processBuffers(nframes);
+					if(midiOut!=null){
+						JackMidi.clearBuffer(midiOut);
+						MidiMessage msg;
+						while ((msg = midi_outs.poll())!=null) {
+							JackMidi.eventWrite(midiOut, 0, msg.getMessage(), msg.getLength());
+						}
+					}
 					return true;
 				} catch (Exception ex) {
 					shutdown();

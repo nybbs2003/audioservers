@@ -2,7 +2,9 @@ package org.jaudiolibs.audioservers.jack;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +35,7 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 		t.setDaemon(true);
 		return t;
 	});
+	private Queue<MidiMessage> outs;
 	private final String deviceName;
 	private final boolean hasInput, hasOutput;
 	private JackClient client;
@@ -59,6 +62,7 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 			}
 			if (hasOutput) {
 				outputPort = client.registerPort("MIDI out", JackPortType.MIDI, JackPortFlags.JackPortIsOutput);
+				outs = new LinkedList<>();
 			}
 			midiEvent = new JackMidi.Event();
 			client.setProcessCallback(this);
@@ -100,11 +104,7 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 		return new Receiver() {
 
 			public void send(MidiMessage message, long timeStamp) {
-				try {
-					JackMidi.clearBuffer(outputPort);
-					JackMidi.eventWrite(outputPort, 0, message.getMessage(), message.getLength());
-				} catch (JackException e) {
-				}
+				outs.offer(message);
 			}
 
 			public void close() {
@@ -126,7 +126,7 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 	}
 
 	public List<Transmitter> getTransmitters() {
-		if(trans!=null&&trans.open){
+		if (trans != null && trans.open) {
 			Arrays.asList(trans);
 		}
 		return Arrays.asList();
@@ -148,6 +148,16 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 			} catch (JackException ex) {
 				System.out.println("ERROR : " + ex);
 				return false;
+			}
+		}
+		if (outputPort != null && outs != null) {
+			try {
+				JackMidi.clearBuffer(outputPort);
+				MidiMessage msg;
+				while ((msg = outs.poll())!=null) {
+					JackMidi.eventWrite(outputPort, 0, msg.getMessage(), msg.getLength());
+				}
+			} catch (JackException e) {
 			}
 		}
 		return true;
@@ -185,7 +195,8 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 		}
 
 	}
-	private static final class MyMidiMessage extends MidiMessage{
+
+	private static final class MyMidiMessage extends MidiMessage {
 
 		protected MyMidiMessage(byte[] data) {
 			super(data);
@@ -195,6 +206,6 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 		public MyMidiMessage clone() {
 			return new MyMidiMessage(data);
 		}
-		
+
 	}
 }
