@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiMessage;
@@ -146,7 +148,7 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 				}
 				return true;
 			} catch (JackException ex) {
-				System.out.println("ERROR : " + ex);
+				Logger.getGlobal().log(Level.SEVERE, "", ex);
 				return false;
 			}
 		}
@@ -157,7 +159,8 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 				while ((msg = outs.poll())!=null) {
 					JackMidi.eventWrite(outputPort, 0, msg.getMessage(), msg.getLength());
 				}
-			} catch (JackException e) {
+			} catch (JackException ex) {
+				Logger.getGlobal().log(Level.SEVERE, "", ex);
 			}
 		}
 		return true;
@@ -192,6 +195,7 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 		@Override
 		public void close() {
 			open = false;
+			q.offer(new byte[] {});
 		}
 
 	}
