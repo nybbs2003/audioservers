@@ -2,11 +2,11 @@ package org.jaudiolibs.audioservers.jack;
 
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -62,7 +62,7 @@ public class JackMidiDevice implements MidiDevice, JackProcessCallback {
 			}
 			if (hasOutput) {
 				outputPort = client.registerPort("MIDI out", JackPortType.MIDI, JackPortFlags.JackPortIsOutput);
-				outs = new LinkedList<>();
+				outs = new ConcurrentLinkedQueue<>();
 			}
 			midiEvent = new JackMidi.Event();
 			client.setProcessCallback(this);
